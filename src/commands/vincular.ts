@@ -111,7 +111,10 @@ async function assignRankRoles(member: GuildMember, currentRanks: { soloQ: strin
         Object.values(queueRoles).forEach(roleId => allRankRoleIds.add(roleId));
     });
 
+
+    //Sería interesante hacer que si no está la caché lo haga por fetch (que no usa la caché)
     for (const roleId of allRankRoleIds) {
+        //if (member.roles.cache.has(roleId)) {
         if (member.roles.cache.has(roleId)) {
             try {
                 await member.roles.remove(roleId);

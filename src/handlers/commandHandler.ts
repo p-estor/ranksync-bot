@@ -2,9 +2,7 @@
 import { Collection, CommandInteraction, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder, ChatInputCommandInteraction } from 'discord.js';
 
 // Importa los datos (que son la instancia de SlashCommandBuilder) y la función execute *específica para slash commands*
-import { data as pingCommandData, execute as executePing } from '../commands/ping';
-import { data as buttonCommandData, execute as executeButton } from '../commands/button';
-import { data as vincularCommandData, execute as executeVincular } from '../commands/vincular';
+//import { data as vincularCommandData, execute as executeVincular } from '../commands/vincular';
 import { data as refreshCommandData, execute as executeRefreshSlash } from '../commands/refresh';
 import { data as setupVincularCommandData, execute as executeSetupVincular } from '../commands/setup-vincular';
 //import { data as gifModalCommandData, execute as executeGifModal } from '../commands/gif-modal';
@@ -23,9 +21,7 @@ interface Command {
 export const commands = new Collection<string, Command>();
 
 // Añade cada comando a la Collection
-commands.set(pingCommandData.name, { data: pingCommandData, execute: executePing });
-commands.set(buttonCommandData.name, { data: buttonCommandData, execute: executeButton });
-commands.set(vincularCommandData.name, { data: vincularCommandData, execute: executeVincular });
+//commands.set(vincularCommandData.name, { data: vincularCommandData, execute: executeVincular });
 commands.set(refreshCommandData.name, { data: refreshCommandData, execute: executeRefreshSlash });
 commands.set(setupVincularCommandData.name, { data: setupVincularCommandData, execute: executeSetupVincular });
 //commands.set(gifModalCommandData.name, { data: gifModalCommandData, execute: executeGifModal });
