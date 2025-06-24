@@ -1,5 +1,5 @@
 // src/commands/vincular.ts
-import axios from 'axios';
+import axios from 'axios'; // Mantenemos axios para otras posibles llamadas si fuera necesario
 import { upsertAccount, getAccountsByDiscordId } from '../utils/accountDb';
 import { storeUserData } from '../utils/storage';
 import {
@@ -18,6 +18,9 @@ import {
     Message,
 } from 'discord.js';
 
+// --- CAMBIO CLAVE 1: Importar TeemoJS correctamente ---
+var TeemoJS = require('teemojs');
+
 // No es necesario exportar safeReply si solo se usa internamente
 async function safeReply(interaction: ChatInputCommandInteraction | ModalSubmitInteraction | any, message: string): Promise<Message | undefined> {
     try {
@@ -34,6 +37,18 @@ async function safeReply(interaction: ChatInputCommandInteraction | ModalSubmitI
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 const MAX_ACCOUNTS = 3;
+
+// --- CAMBIO CLAVE 2: Inicializar TeemoJS una vez globalmente (o en un módulo de API) ---
+// Es una buena práctica inicializar TeemoJS una sola vez con tu API Key.
+// Puedes hacerlo aquí o, preferiblemente, en un módulo separado de "riotApi.ts"
+// y exportar la instancia para usarla en otros comandos.
+// Por simplicidad, lo inicializaremos aquí para este ejemplo.
+if (!RIOT_API_KEY) {
+    console.error('Environment variable RIOT_API_KEY is not set.');
+    process.exit(1); // Sale del proceso si la clave no está configurada
+}
+
+const riotApiClient = TeemoJS(RIOT_API_KEY); // Ahora TeemoJS es una función
 
 export const data = new SlashCommandBuilder()
     .setName('vincular')
@@ -52,9 +67,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     await showVincularModal(interaction);
 }
 
-// showVincularModal puede ser llamado desde el comando slash (ChatInputCommandInteraction)
-// o potencialmente desde un botón (ButtonInteraction) si decides añadir uno para reabrir el modal.
-// Por ahora, lo mantenemos compatible con la llamada desde el comando.
 export async function showVincularModal(interaction: ChatInputCommandInteraction | ButtonInteraction): Promise<void> {
     const modal = new ModalBuilder()
         .setCustomId('vincularModal')
@@ -64,12 +76,12 @@ export async function showVincularModal(interaction: ChatInputCommandInteraction
         .setCustomId('alias')
         .setLabel('Alias (nombre de invocador)')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Ej: Faker')
+        .setPlaceholder('Ej: Hide on bush')
         .setRequired(true);
 
     const tagInput = new TextInputBuilder()
         .setCustomId('tag')
-        .setLabel('Tag (1234)')
+        .setLabel('Tag sin #')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('Ej: EUW')
         .setRequired(true);
@@ -85,36 +97,32 @@ export async function showVincularModal(interaction: ChatInputCommandInteraction
 const roleIdMap: { [key: string]: { [tier: string]: string } } = {
     // ... (tu roleIdMap sin cambios) ...
     SOLOQ: {
-        IRON: '1370029647005352018', BRONZE: '1370029647005352022', SILVER: '1370029647034581032',
-        GOLD: '1370029647034581036', PLATINUM: '1370029647034581040', EMERALD: '1370029647101952132',
-        DIAMOND: '1370029647101952136', MASTER: '1370029647126986803', GRANDMASTER: '1370029647126986807',
+        HIERRO: '1370029647005352018', BRONCE: '1370029647005352022', PLATA: '1370029647034581032',
+        ORO: '1370029647034581036', PLATINO: '1370029647034581040', ESMERALDA: '1370029647101952132',
+        DIAMANTE: '1370029647101952136', MAESTRO: '1370029647126986803', GRANDMASTER: '1370029647126986807',
         CHALLENGER: '1370029647126986811', UNRANKED: '1370029646976122898',
     },
     FLEX: {
-        IRON: '1370029647005352017', BRONZE: '1370029647005352021', SILVER: '1370029647005352025',
-        GOLD: '1370029647034581035', PLATINUM: '1370029647034581039', EMERALD: '1370029647101952131',
-        DIAMOND: '1370029647101952135', MASTER: '1370029647101952139', GRANDMASTER: '1370029647126986806',
+        HIERRO: '1370029647005352017', BRONCE: '1370029647005352021', PLATA: '1370029647005352025',
+        ORO: '1370029647034581035', PLATINO: '1370029647034581039', ESMERALDA: '1370029647101952131',
+        DIAMANTE: '1370029647101952135', MAESTRO: '1370029647101952139', GRANDMASTER: '1370029647126986806',
         CHALLENGER: '1370029647126986810', UNRANKED: '1370029646976122897',
     },
     TFT: {
-        IRON: '1370029647005352016', BRONZE: '1370029647005352020', SILVER: '1370029647005352024',
-        GOLD: '1370029647034581034', PLATINUM: '1370029647034581038', EMERALD: '1370029647101952130',
-        DIAMOND: '1370029647101952134', MASTER: '1370029647101952138', GRANDMASTER: '1370029647126986805',
+        HIERRO: '1370029647005352016', BRONCE: '1370029647005352020', PLATA: '1370029647005352024',
+        ORO: '1370029647034581034', PLATINO: '1370029647034581038', ESMERALDA: '1370029647101952130',
+        DIAMANTE: '1370029647101952134', MAESTRO: '1370029647101952138', GRANDMASTER: '1370029647126986805',
         CHALLENGER: '1370029647126986809', UNRANKED: '1370029646976122896',
     },
 };
 
 async function assignRankRoles(member: GuildMember, currentRanks: { soloQ: string, flex: string, tft: string }): Promise<string[]> {
-    // ... (tu función assignRankRoles sin cambios, solo asegúrate de que el tipo de retorno sea Promise<string[]>) ...
     const allRankRoleIds = new Set<string>();
     Object.values(roleIdMap).forEach(queueRoles => {
         Object.values(queueRoles).forEach(roleId => allRankRoleIds.add(roleId));
     });
 
-
-    //Sería interesante hacer que si no está la caché lo haga por fetch (que no usa la caché)
     for (const roleId of allRankRoleIds) {
-        //if (member.roles.cache.has(roleId)) {
         if (member.roles.cache.has(roleId)) {
             try {
                 await member.roles.remove(roleId);
@@ -178,7 +186,6 @@ async function assignRankRoles(member: GuildMember, currentRanks: { soloQ: strin
 }
 
 
-// Exportamos handleModalSubmit para que modalHandler.ts pueda importarlo.
 export async function handleModalSubmit(interaction: ModalSubmitInteraction): Promise<void> {
     if (interaction.customId !== 'vincularModal') return;
 
@@ -190,19 +197,16 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
     let initialReply: Message | undefined;
 
     try {
-        // Paso 1: Obtener puuid
-        const puuidResponse = await axios.get(
-            `https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${alias}/${tag}`,
-            { headers: { 'X-Riot-Token': RIOT_API_KEY } }
-        );
+        // --- CAMBIO CLAVE 3: Usar TeemoJS para obtener puuid ---
+        // El shard 'AMERICAS' es para Riot ID universal. TeemoJS se encarga de las regiones.
+        const riotAccount = await riotApiClient.get('AMERICAS', 'account.getByRiotId', alias, tag);
+        const puuid = riotAccount?.puuid;
 
-        const puuid = puuidResponse.data?.puuid;
         if (!puuid) {
             await safeReply(interaction, '❌ No se encontró la cuenta con esos datos. Asegúrate de que el Alias y el Tag sean correctos (ej: Faker #EUW).');
             return;
         }
 
-        // ¡Nueva comprobación! Antes de pedir el icono, verifica si esta cuenta de LoL ya está vinculada por *este* Discord ID
         const discordId = interaction.user.id;
         const userAccounts = getAccountsByDiscordId(discordId);
         const accountAlreadyLinked = userAccounts.some(account => account.puuid === puuid);
@@ -211,16 +215,13 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             await safeReply(interaction, `ℹ️ La cuenta de League of Legends con el Riot ID **${alias}#${tag}** ya está vinculada a tu Discord. No se puede vincular dos veces.`);
             return;
         }
-        // Fin de la nueva comprobación de duplicados para el mismo usuario.
 
+        // --- CAMBIO CLAVE 4: Usar TeemoJS para obtener summoner ---
+        // Asumiendo EUW como región principal para el summoner para este ejemplo.
+        // Puedes parametrizar esto si necesitas soportar múltiples regiones de invocador.
+        const summoner = await riotApiClient.get('EUW1', 'summoner.getByPUUID', puuid);
+        console.log("PUUID", summoner)
 
-        // Paso 2: Obtener summoner
-        const summonerResponse = await axios.get(
-            `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`,
-            { headers: { 'X-Riot-Token': RIOT_API_KEY } }
-        );
-
-        const summoner = summonerResponse.data;
         if (!summoner || !summoner.id) {
             await safeReply(interaction, '❌ No se pudo obtener la información del invocador.');
             return;
@@ -228,17 +229,17 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
 
         const summonerId = summoner.id;
 
-        // Paso 3: Generar icono aleatorio
-        const randomIconId = Math.floor(Math.random() * 28) + 1; // Un rango de 1 a 28 para asegurar que los iconos existan
-        const iconUrl = `https://ddragon.leagueoflegends.com/cdn/14.9.1/img/profileicon/${randomIconId}.png`; // Asegúrate de actualizar la versión del CDN de DDragon
+        const randomIconId = Math.floor(Math.random() * 28) + 1;
+        // La URL de DDragon es estática, no necesita TeemoJS
+        const iconUrl = `https://ddragon.leagueoflegends.com/cdn/14.9.1/img/profileicon/${randomIconId}.png`;
+        const normalizedIconUrl = `https://images.weserv.nl/?url=${encodeURIComponent(iconUrl)}&w=128&h=128&fit=contain`;
 
         storeUserData(interaction.user.id, puuid, randomIconId);
 
-        // Paso 4: Enviar embed con imagen y botón
         const embed = new EmbedBuilder()
             .setTitle('Verificación de icono')
-            .setDescription('Cambia tu icono de invocador en League of Legends al que ves en la imagen y luego pulsa "Confirmar".\n\n*(Si no tienes el icono, puedes comprarlo por 1 PI en la tienda de LoL)*')
-            .setImage(iconUrl)
+            .setDescription('Cambia tu icono de invocador en League of Legends al que ves en la imagen y luego pulsa "Confirmar".')
+            .setImage(normalizedIconUrl)
             .setColor('Blue');
 
         const button = new ButtonBuilder()
@@ -256,9 +257,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             fetchReply: true,
         }) as Message;
 
-        // Crear filtro y colector
-        // Usamos MessageComponentInteraction para el filtro del colector
-        const filter = (buttonInteraction: any) => // No cambiar a ButtonInteraction aqui, porque se tipa en Collector
+        const filter = (buttonInteraction: any) =>
             buttonInteraction.customId === `confirmarIcono-${puuid}-${randomIconId}` &&
             buttonInteraction.user.id === interaction.user.id;
 
@@ -268,11 +267,11 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             return;
         }
 
-        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 5 * 60 * 1000 }); // 5 minutos para confirmar
+        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 5 * 60 * 1000 });
 
-        collector.on('collect', async (buttonInteraction: any) => { // Aqui el tipo ya es ButtonInteraction
+        collector.on('collect', async (buttonInteraction: ButtonInteraction) => { // Aqui el tipo ya es ButtonInteraction
             try {
-                await buttonInteraction.deferUpdate(); // Indicar que se actualizará el mensaje original
+                await buttonInteraction.deferUpdate();
             } catch (deferError: any) {
                 console.error('Error al deferUpdate la interacción del botón:', deferError.code || deferError.message);
                 if (initialReply) {
@@ -296,12 +295,10 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             let currentSummonerId: string | undefined;
 
             try {
-                const summonerRes = await axios.get(
-                    `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`,
-                    { headers: { 'X-Riot-Token': RIOT_API_KEY } }
-                );
-                currentSummonerId = summonerRes.data?.id;
-                updatedIconId = summonerRes.data?.profileIconId;
+                // --- CAMBIO CLAVE 5: Usar TeemoJS para verificar el icono actualizado ---
+                const updatedSummoner = await riotApiClient.get('EUW1', 'summoner.getByPUUID', puuid);
+                currentSummonerId = updatedSummoner?.id;
+                updatedIconId = updatedSummoner?.profileIconId;
 
                 if (!currentSummonerId) {
                     await buttonInteraction.editReply({
@@ -337,11 +334,11 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             let rankData: any[] = [];
             let rankFetchError = false;
             try {
-                const rankResponse = await axios.get(
-                    `https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/${currentSummonerId}`,
-                    { headers: { 'X-Riot-Token': RIOT_API_KEY } }
-                );
-                rankData = rankResponse.data;
+                // --- CAMBIO CLAVE 6: Usar TeemoJS para obtener los rangos ---
+                // Nota: La región para las ligas es la misma que la del invocador.
+                rankData = await riotApiClient.get('EUW1', 'league.getLeagueEntriesByPUUID', puuid);
+                console.log("rankdata: ", rankData)
+                console.log("rankdatatoString: " + rankData.toString)
             } catch (apiError: any) {
                 console.error('Error al obtener los rangos de Riot Games:', apiError.response?.status, apiError.response?.data || apiError.message);
                 rankFetchError = true;
@@ -351,11 +348,39 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             const flexRankEntry = Array.isArray(rankData) ? rankData.find((entry: { queueType: string }) => entry.queueType === 'RANKED_FLEX_SR') : null;
             const tftRankEntry = Array.isArray(rankData) ? rankData.find((entry: { queueType: string }) => entry.queueType === 'RANKED_TFT') : null;
 
+            console.log("solorankentry1: ", soloRankEntry)
+
+            // Esto sirve para traducir los rangos, ya que desde la API llegan en inglés.
+            const toSpanish = {
+                rank: {
+                    IRON: 'HIERRO', BRONZE: 'BRONCE', SILVER: 'PLATA',
+                    GOLD: 'ORO', PLATINUM: 'PLATINO', EMERALD: 'ESMERALDA',
+                    DIAMOND: 'DIAMANTE', MASTER: 'MAESTRO', GRANDMASTER: 'GRAN MAESTRO',
+                    CHALLENGER: 'CHALLENGER', UNRANKED: 'UNRANKED',
+                }
+            };
+
+            if (soloRankEntry) {
+                soloRankEntry.tier = toSpanish.rank[soloRankEntry.tier as keyof typeof toSpanish.rank]
+                console.log("solorankentry2: ", soloRankEntry)
+            }
+            
+
+            if (flexRankEntry) {
+                flexRankEntry.tier = toSpanish.rank[flexRankEntry.tier as keyof typeof toSpanish.rank]
+            }
+
+            if (tftRankEntry) {
+                tftRankEntry.tier = toSpanish.rank[tftRankEntry?.tier as keyof typeof toSpanish.rank]
+            }
+
             const currentRanks = {
                 soloQ: soloRankEntry?.tier ?? 'UNRANKED',
                 flex: flexRankEntry?.tier ?? 'UNRANKED',
                 tft: tftRankEntry?.tier ?? 'UNRANKED',
             };
+
+            console.log("currentRankSOLOQ", currentRanks)
 
             const guild = interaction.guild;
             if (!guild) {
@@ -371,6 +396,8 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
 
             const assignedRoleNames = await assignRankRoles(member, currentRanks);
 
+            console.log("assignedRoleNames", assignedRoleNames)
+
             await upsertAccount({
                 discordId: interaction.user.id,
                 puuid,
@@ -383,7 +410,7 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             });
 
             let successMessage = `✅ Icono verificado correctamente. Tu cuenta de LoL **${alias}#${tag}** ha sido vinculada.`;
-            successMessage += `\nSe han asignado los siguientes roles de rango basados en esta cuenta: **${assignedRoleNames.join(', ')}**.`;
+            successMessage += `\nSe han asignado los siguientes roles: **${assignedRoleNames.join(', ')}**.`;
             if (rankFetchError) {
                 successMessage += '\n\n⚠️ Hubo un problema al obtener tus rangos de Riot Games. Usa `/refresh` para actualizar más tarde.';
             }
@@ -401,11 +428,10 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
             if (reason === 'time') {
                 if (initialReply) {
                     try {
-                        await initialReply.delete(); // Intenta eliminar el mensaje efímero
+                        await initialReply.delete();
                         console.log('Mensaje efímero de verificación de icono eliminado por expiración.');
                     } catch (deleteError) {
                         console.error('Error al intentar eliminar el mensaje inicial por expiración:', deleteError);
-                        // Fallback: si no se puede eliminar, edita el mensaje para indicar que ha expirado.
                         try {
                             const expiredButton = new ButtonBuilder()
                                 .setCustomId(`confirmarIcono-expired`)
@@ -425,8 +451,6 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
                         }
                     }
                 } else {
-                    // Si initialReply es undefined, no podemos editar/eliminar. Solo se puede responder con followUp.
-                    // Esto es un caso raro si safeReply no devolvió el mensaje.
                     await safeReply(interaction, '⏰ Se acabó el tiempo para confirmar el cambio de icono. Por favor, inténtalo de nuevo si aún deseas vincular tu cuenta.');
                 }
             }
@@ -434,14 +458,21 @@ export async function handleModalSubmit(interaction: ModalSubmitInteraction): Pr
         });
 
     } catch (error: any) {
-        console.error('Error al vincular cuenta:', error.response?.status, error.response?.data || error.message);
-        let errorMessage = '❌ No se pudo vincular la cuenta. Verifica que el alias y el tag sean correctos y que la cuenta exista. (Ej: Faker #EUW).';
-        if (error.response && error.response.status === 404) {
+        // En caso de error con TeemoJS, la estructura de error.response NO existe,
+        // TeemoJS lanza errores directamente o los contiene en el objeto de error.
+        // Adaptamos el manejo de errores.
+        console.error('Error al vincular cuenta (TeemoJS):', error.message);
+        let errorMessage = '❌ No se pudo vincular la cuenta. Verifica que el alias y el tag sean correctos y que la cuenta exista.';
+
+        // TeemoJS suele lanzar errores con mensajes descriptivos.
+        // Si el error contiene "404", es un "Not Found".
+        // Si contiene "403", es un "Forbidden" (problema de API Key).
+        if (error.message.includes('404')) {
             errorMessage = '❌ La cuenta de Riot ID no fue encontrada. Asegúrate de que el Alias y el Tag sean correctos (Ej: Faker #EUW) y que la cuenta exista.';
-        } else if (error.response && error.response.status === 403) {
+        } else if (error.message.includes('403')) {
             errorMessage = '❌ Error de autenticación con la API de Riot Games. Esto suele ser un problema temporal o de configuración del bot. Contacta a un administrador.';
-        } else if (error.response) {
-            errorMessage = `❌ Error en la API de Riot Games (${error.response.status}): ${error.response.statusText}. Intenta de nuevo más tarde.`;
+        } else {
+            errorMessage = `❌ Hubo un error inesperado con la API de Riot Games. Intenta de nuevo más tarde. (Detalles: ${error.message})`;
         }
         await safeReply(interaction, errorMessage);
     }

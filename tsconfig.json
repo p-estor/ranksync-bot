@@ -9,5 +9,12 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": [
+    "src/**/*.ts",         // Incluye todos los archivos .ts dentro de 'src' y sus subdirectorios
+    "src/types/**/*.d.ts" // ¡ESTA ES LA LÍNEA CRUCIAL! Incluye todos los .d.ts dentro de 'src/types'
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

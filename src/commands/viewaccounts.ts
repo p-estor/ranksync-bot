@@ -48,7 +48,7 @@ export async function handleViewAccountsButton(interaction: ChatInputCommandInte
 
     // Construir el embed para mostrar las cuentas
     const embed = new EmbedBuilder()
-        .setTitle(`🎮 Tus Cuentas de LoL Vinculadas (${userAccounts.length})`)
+        .setTitle(`Cuentas Vinculadas`)
         .setColor('Green') // Puedes elegir otro color
         .setDescription('Aquí están las cuentas de League of Legends que tienes vinculadas a tu Discord.');
 
@@ -103,7 +103,7 @@ export async function showUnlinkAccountSelector(interaction: ButtonInteraction) 
     const selectOptions = userAccounts.map((account: Account, index: number) =>
         new StringSelectMenuOptionBuilder()
             .setLabel(`${account.summonerName}#${account.tagLine} (${account.rankSoloQ})`) // Texto visible
-            .setDescription(`PUUID: ${account.puuid.substring(0, 10)}...`) // Descripción pequeña (parte del PUUID)
+            //.setDescription(`PUUID: ${account.puuid.substring(0, 10)}...`) // Descripción pequeña (parte del PUUID)
             .setValue(account.puuid) // El valor real que se enviará cuando el usuario seleccione esta opción
     );
 
