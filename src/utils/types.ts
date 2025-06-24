@@ -5,6 +5,8 @@ export interface Account {
   summonerName: string;
   tagLine: string;
   summonerId: string;
-  rankTier: string;
-  lastUpdated?: string; // opcional, porque la BD lo pone automáticamente
+  rankSoloQ: string; // Renombrado de 'rankTier' a 'rankSoloQ'
+  rankFlex: string;  // Nuevo campo para el rango de Flex
+  rankTFT: string;   // Nuevo campo para el rango de TFT
+  lastUpdated?: string; // Opcional, ya que la BD lo maneja automáticamente
 }
