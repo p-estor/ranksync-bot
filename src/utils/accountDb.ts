@@ -6,7 +6,7 @@ import type { Account } from './types';
 // Función para insertar o actualizar una cuenta
 export async function upsertAccount(data: Account) {
     try {
-        // CAMBIO: Verificar el límite de cuentas ANTES de intentar insertar/actualizar
+        // Verificar el límite de cuentas ANTES de intentar insertar/actualizar
         const userAccounts = getAccountsByDiscordId(data.discordId);
         const existingAccount = userAccounts.find(acc => acc.puuid === data.puuid);
 
@@ -16,41 +16,45 @@ export async function upsertAccount(data: Account) {
         }
 
         const stmt = db.prepare(`
-            INSERT INTO accounts (discordId, puuid, summonerName, tagLine, summonerId, rankSoloQ, rankFlex, rankTFT)
-            VALUES (@discordId, @puuid, @summonerName, @tagLine, @summonerId, @rankSoloQ, @rankFlex, @rankTFT)
-            ON CONFLICT(puuid) DO UPDATE SET -- La clave de conflicto por puuid es correcta para UPDATE
+            INSERT INTO accounts (discordId, puuid, puuidTFT, summonerName, tagLine, rankSoloQ, rankFlex, rankTFT, rankDoubleUp, lastUpdated)
+            VALUES (@discordId, @puuid, @puuidTFT, @summonerName, @tagLine, @rankSoloQ, @rankFlex, @rankTFT, @rankDoubleUp, CURRENT_TIMESTAMP)
+            ON CONFLICT(puuid) DO UPDATE SET
                 discordId = excluded.discordId,
+                -- puuid = excluded.puuid, -- No es necesario actualizar puuid si es la clave de conflicto
+                puuidTFT = excluded.puuidTFT, -- ¡AÑADIDO ESTO!
                 summonerName = excluded.summonerName,
                 tagLine = excluded.tagLine,
-                summonerId = excluded.summonerId,
                 rankSoloQ = excluded.rankSoloQ,
                 rankFlex = excluded.rankFlex,
                 rankTFT = excluded.rankTFT,
+                rankDoubleUp = excluded.rankDoubleUp,
                 lastUpdated = CURRENT_TIMESTAMP
         `);
+        // Asegúrate de que `data` contenga `puuidTFT` antes de pasarlo a stmt.run
+        // Si puuidTFT es undefined, SQLite lo guardará como NULL, lo cual es deseable.
         const info = stmt.run(data);
         if (info.changes === 1) {
             console.log(`[DB] Cuenta vinculada o actualizada para DiscordID: ${data.discordId}, PUUID: ${data.puuid}`);
         }
         return info;
-    } catch (error: any) { // Usamos 'any' para capturar cualquier tipo de error y luego verificar si es un error de límite
+    } catch (error: any) {
         if (error.message === 'LIMIT_EXCEEDED') {
-            throw error; // Relanzar el error de límite
+            throw error;
         }
         console.error('[DB] Error en upsertAccount:', error);
         throw error;
     }
 }
 
-// Función: Obtener TODAS las cuentas vinculadas a un Discord ID
+// Las otras funciones (getAccountsByDiscordId, deleteAccount, getAccountByPuuid) están bien,
+// ya que SELECT * devolverá puuidTFT si existe en la tabla.
 export function getAccountsByDiscordId(discordId: string): Account[] {
     const stmt = db.prepare('SELECT * FROM accounts WHERE discordId = ?');
-    const accounts = stmt.all(discordId) as Account[]; // Usamos .all() para obtener múltiples resultados
+    const accounts = stmt.all(discordId) as Account[];
     console.log(`[DB] Cuentas obtenidas para Discord ID ${discordId}: ${accounts.length}`);
     return accounts;
 }
 
-// NUEVA FUNCIÓN: Eliminar una cuenta específica por discordId y puuid
 export function deleteAccount(discordId: string, puuid: string): boolean {
     try {
         const stmt = db.prepare('DELETE FROM accounts WHERE discordId = ? AND puuid = ?');
@@ -68,7 +72,6 @@ export function deleteAccount(discordId: string, puuid: string): boolean {
     }
 }
 
-// Opcional: Función para obtener una cuenta por PUUID (si necesitas verificar su existencia en otros lugares)
 export function getAccountByPuuid(puuid: string): Account | undefined {
     const stmt = db.prepare('SELECT * FROM accounts WHERE puuid = ?');
     const account = stmt.get(puuid) as Account | undefined;

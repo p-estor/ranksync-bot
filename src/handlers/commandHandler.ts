@@ -3,7 +3,7 @@ import { Collection, CommandInteraction, SlashCommandBuilder, SlashCommandSubcom
 
 // Importa los datos (que son la instancia de SlashCommandBuilder) y la función execute *específica para slash commands*
 //import { data as vincularCommandData, execute as executeVincular } from '../commands/vincular';
-import { data as refreshCommandData, execute as executeRefreshSlash } from '../commands/refresh';
+//import { data as refreshCommandData, execute as executeRefreshSlash } from '../commands/refresh';
 import { data as setupVincularCommandData, execute as executeSetupVincular } from '../commands/setup-vincular';
 //import { data as gifModalCommandData, execute as executeGifModal } from '../commands/gif-modal';
 //import { data as listarRolesCommandData, execute as executeListarRoles } from '../commands/listar-roles';
@@ -22,7 +22,7 @@ export const commands = new Collection<string, Command>();
 
 // Añade cada comando a la Collection
 //commands.set(vincularCommandData.name, { data: vincularCommandData, execute: executeVincular });
-commands.set(refreshCommandData.name, { data: refreshCommandData, execute: executeRefreshSlash });
+//commands.set(refreshCommandData.name, { data: refreshCommandData, execute: executeRefreshSlash });
 commands.set(setupVincularCommandData.name, { data: setupVincularCommandData, execute: executeSetupVincular });
 //commands.set(gifModalCommandData.name, { data: gifModalCommandData, execute: executeGifModal });
 //commands.set(listarRolesCommandData.name, { data: listarRolesCommandData, execute: executeListarRoles });
