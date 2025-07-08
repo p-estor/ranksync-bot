@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RankSync Bot - Demostración de Flujo de Usuario</title>
+    <title>RankSync Bot - User Flow Demonstration</title>
     <style>
         body { font-family: sans-serif; line-height: 1.6; margin: 20px; max-width: 800px; margin-left: auto; margin-right: auto; }
         h1, h2 { color: #333; }
@@ -12,44 +12,44 @@
     </style>
 </head>
 <body>
-    <h1>RankSync Bot - Sincronización de Rangos de LoL/TFT para Discord</h1>
-    <p>RankSync es un bot de Discord que permite a los usuarios vincular sus cuentas de League of Legends y Teamfight Tactics para obtener automáticamente roles de rango actualizados en su servidor de Discord.</p>
+    <h1>RankSync Bot - LoL/TFT Rank Synchronization for Discord</h1>
+    <p>RankSync is a Discord bot that allows users to link their League of Legends and Teamfight Tactics accounts to automatically receive updated rank roles on their Discord server.</p>
 
-    <h2>Demostración del Flujo de Usuario (User Flow)</h2>
+    <h2>User Flow Demonstration</h2>
 
     <div class="step">
-        <h3>Paso 1: Vincular una Cuenta de Riot Games (`/vincular`)</h3>
-        <p>Los usuarios inician el proceso de vinculación con el comando <code>/vincular</code>, introducen su Riot ID y verifican la propiedad de la cuenta cambiando su icono de invocador. Una vez verificado, sus rangos son consultados y los roles de Discord se asignan automáticamente.</p>
-        <p><strong>Comando y Modal de Entrada:</strong></p>
-        <img src="path/to/your/screenshot_vincular_command.png" alt="Comando /vincular y modal">
-        <p><strong>Verificación de Icono:</strong></p>
-        <img src="path/to/your/screenshot_icon_verification.png" alt="Mensaje de verificación de icono">
-        <p><strong>Confirmación y Asignación de Roles:</strong></p>
-        <img src="path/to/your/screenshot_linking_success.png" alt="Mensaje de éxito de vinculación">
+        <h3>Step 1: Link a Riot Games Account (`/vincular`)</h3>
+        <p>Users initiate the linking process with the <code>/vincular</code> command, enter their Riot ID, and verify account ownership by changing their summoner icon. Once verified, their ranks are queried, and Discord roles are automatically assigned.</p>
+        <p><strong>Command and Input Modal:</strong></p>
+        <img src="path/to/your/screenshot_vincular_command.png" alt="Command /vincular and modal">
+        <p><strong>Icon Verification:</strong></p>
+        <img src="path/to/your/screenshot_icon_verification.png" alt="Icon verification message">
+        <p><strong>Confirmation and Role Assignment:</strong></p>
+        <img src="path/to/your/screenshot_linking_success.png" alt="Linking success message">
         </div>
 
     <div class="step">
-        <h3>Paso 2: Actualizar Rangos y Roles (`/refresh`)</h3>
-        <p>Los usuarios pueden actualizar sus rangos y roles en cualquier momento para reflejar los cambios en sus partidas recientes.</p>
-        <img src="path/to/your/screenshot_refresh_command.png" alt="Comando /refresh">
-        <img src="path/to/your/screenshot_refresh_success.png" alt="Mensaje de éxito de refresh">
+        <h3>Step 2: Refresh Ranks and Roles (`/refresh`)</h3>
+        <p>Users can refresh their ranks and roles at any time to reflect changes from their recent games.</p>
+        <img src="path/to/your/screenshot_refresh_command.png" alt="Command /refresh">
+        <img src="path/to/your/screenshot_refresh_success.png" alt="Refresh success message">
     </div>
 
     <div class="step">
-        <h3>Paso 3: Ver y Desvincular Cuentas (`/viewaccounts`)</h3>
-        <p>Los usuarios pueden ver todas las cuentas de Riot vinculadas a su Discord y tienen la opción de desvincular cualquiera de ellas.</p>
-        <img src="path/to/your/screenshot_viewaccounts_command.png" alt="Comando /viewaccounts">
-        <img src="path/to/your/screenshot_unlink_selector.png" alt="Selector de desvinculación">
-        <img src="path/to/your/screenshot_unlink_success.png" alt="Mensaje de éxito de desvinculación">
+        <h3>Step 3: View and Unlink Accounts (`/viewaccounts`)</h3>
+        <p>Users can view all Riot accounts linked to their Discord and have the option to unlink any of them.</p>
+        <img src="path/to/your/screenshot_viewaccounts_command.png" alt="Command /viewaccounts">
+        <img src="path/to/your/screenshot_unlink_selector.png" alt="Unlink selector">
+        <img src="path/to/your/screenshot_unlink_success.png" alt="Unlink success message">
     </div>
 
-    <h2>Información Técnica</h2>
-    <p>Desarrollado con Node.js y Discord.js, utilizando la API de Riot Games (via TeemoJS) y SQLite para la gestión de datos locales.</p>
-    <p>Funcionalidades clave: Vinculación segura de cuentas, verificación de propiedad, actualización dinámica de rangos y roles de Discord, soporte para múltiples cuentas por usuario.</p>
+    <h2>Technical Information</h2>
+    <p>Developed with Node.js and Discord.js, utilizing the Riot Games API (via TeemoJS) and SQLite for local data management.</p>
+    <p>Key functionalities: Secure account linking, ownership verification, dynamic Discord rank and role updates, support for multiple accounts per user.</p>
 
-    <h2>Compromiso con las Políticas de Riot Games</h2>
-    <p>El bot RankSync cumple plenamente con los Términos de Servicio de Riot Games y las Políticas de Desarrollo. No almacena datos sensibles del usuario. Todas las operaciones de la API de Riot se realizan de acuerdo con las directrices establecidas.</p>
-    <p>Repositorio de GitHub: <a href="https://github.com/p-estor/ranksync-bot" target="_blank">https://github.com/p-estor/ranksync-bot</a></p>
+    <h2>Commitment to Riot Games Policies</h2>
+    <p>The RankSync bot fully complies with Riot Games' Terms of Service and Developer Policies. It does not store sensitive user data, only PUUIDs and ranks necessary for core functionality. All Riot API operations are performed in accordance with established guidelines.</p>
+    <p>GitHub Repository: <a href="https://github.com/p-estor/ranksync-bot" target="_blank">https://github.com/p-estor/ranksync-bot</a></p>
 
 </body>
 </html>
