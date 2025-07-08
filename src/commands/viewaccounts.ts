@@ -14,7 +14,7 @@ import {
 } from 'discord.js';
 import { getAccountsByDiscordId, deleteAccount } from '../utils/accountDb';
 import type { Account } from '../utils/types';
-import { assignRankRoles } from '../commands/refresh'; // Importamos assignRankRoles para actualizar roles al desvincular
+import { assignRankRoles, toSpanish } from '../utils/roleAssigner';
 
 // Función de respuesta segura
 async function safeReply(interaction: RepliableInteraction, message: string, ephemeral: boolean = true) {
@@ -54,14 +54,15 @@ export async function handleViewAccountsButton(interaction: ChatInputCommandInte
 
     // Añadir cada cuenta al embed
     userAccounts.forEach((account: Account, index: number) => {
-        embed.addFields(
-            {
-                name: `Cuenta ${index + 1}: ${account.summonerName}#${account.tagLine}`,
-                value: `**SoloQ:** ${account.rankSoloQ}\n**Flex:** ${account.rankFlex}\n**TFT:** ${account.rankTFT}\n**Double Up:** ${account.rankDoubleUp || 'UNRANKED'}\n*(ID de Riot: ${account.summonerName}#${account.tagLine})*`,
-                inline: false,
-            }
-        );
-    });
+    embed.addFields(
+        {
+            name: `Cuenta ${index + 1}: ${account.summonerName}#${account.tagLine}`,
+            // ¡Esta es la línea que debe cambiar!
+            value: `**SoloQ:** ${toSpanish(account.rankSoloQ)}\n**Flex:** ${toSpanish(account.rankFlex)}\n**TFT:** ${toSpanish(account.rankTFT)}\n**Double Up:** ${toSpanish(account.rankDoubleUp || 'UNRANKED')}\n*(ID de Riot: ${account.summonerName}#${account.tagLine})*`,
+            inline: false,
+        }
+    );
+});
 
     // Añadir un pie de página con el límite
     embed.setFooter({ text: `Puedes vincular hasta 3 cuentas. (${userAccounts.length}/3)` });
@@ -101,7 +102,7 @@ export async function showUnlinkAccountSelector(interaction: ButtonInteraction) 
     // Crear las opciones para el menú desplegable
     const selectOptions = userAccounts.map((account: Account, index: number) =>
         new StringSelectMenuOptionBuilder()
-            .setLabel(`${account.summonerName}#${account.tagLine} (SoloQ: ${account.rankSoloQ}, TFT: ${account.rankTFT}, Double Up: ${account.rankDoubleUp || 'UNRANKED'})`)
+            .setLabel(`${account.summonerName}#${account.tagLine}`)
             .setValue(account.puuid) // El valor real que se enviará cuando el usuario seleccione esta opción
     );
 
@@ -123,15 +124,11 @@ export async function showUnlinkAccountSelector(interaction: ButtonInteraction) 
     console.log(`[VIEWACCOUNTS] Selector de desvinculación mostrado para ${interaction.user.tag}.`);
 }
 
-// NUEVA FUNCIÓN: Manejar la selección del StringSelectMenu para desvincular
 export async function handleUnlinkAccountSelection(interaction: StringSelectMenuInteraction) {
-    // deferUpdate() se usa para interacciones de componentes que no necesitan una respuesta nueva,
-    // simplemente reconocen la interacción y permiten editar el mensaje original.
     await interaction.deferUpdate();
     console.log(`[VIEWACCOUNTS] handleUnlinkAccountSelection iniciado por ${interaction.user.tag}`);
 
     const discordId = interaction.user.id;
-    // interaction.values es un array con los valores seleccionados. Para un StringSelectMenu con single select, es el primer elemento.
     const puuidToUnlink = interaction.values[0];
 
     console.log(`[VIEWACCOUNTS] Intento de desvincular cuenta. Discord ID: ${discordId}, PUUID a desvincular: ${puuidToUnlink}`);
@@ -142,8 +139,8 @@ export async function handleUnlinkAccountSelection(interaction: StringSelectMenu
         return;
     }
 
-    const userAccounts = getAccountsByDiscordId(discordId);
-    const accountToDelete = userAccounts?.find(acc => acc.puuid === puuidToUnlink);
+    const userAccountsBeforeDeletion = getAccountsByDiscordId(discordId);
+    const accountToDelete = userAccountsBeforeDeletion?.find(acc => acc.puuid === puuidToUnlink);
 
     if (!accountToDelete) {
         console.warn(`[VIEWACCOUNTS] Cuenta a desvincular no encontrada en DB para PUUID: ${puuidToUnlink}`);
@@ -151,7 +148,6 @@ export async function handleUnlinkAccountSelection(interaction: StringSelectMenu
         return;
     }
 
-    // LÓGICA CLAVE: Eliminar la cuenta de la base de datos
     const deletionSuccessful = deleteAccount(discordId, puuidToUnlink);
 
     if (!deletionSuccessful) {
@@ -160,43 +156,32 @@ export async function handleUnlinkAccountSelection(interaction: StringSelectMenu
         return;
     }
 
-    // Lógica para actualizar roles después de desvincular
     const member = interaction.guild?.members.cache.get(discordId) || await interaction.guild?.members.fetch(discordId);
 
     if (member) {
-        const remainingAccounts = getAccountsByDiscordId(discordId); // Vuelve a obtener las cuentas restantes
+        const remainingAccounts = getAccountsByDiscordId(discordId); // Obtener las cuentas restantes
+
+        await assignRankRoles(member, remainingAccounts); // Pasamos el array de cuentas restantes
 
         if (!remainingAccounts || remainingAccounts.length === 0) {
-            // Si no quedan cuentas, remover todos los roles de rango
-            console.log(`[VIEWACCOUNTS] No quedan cuentas vinculadas para ${discordId}. Removiendo todos los roles de rango.`);
-            // Aquí, pasamos `true` como tercer argumento para indicar que se deben remover todos los roles de rango.
-            // Los rangos específicos en el segundo argumento no importan en este caso, pero se mantienen por tipado.
-            await assignRankRoles(member, { soloQ: '', flex: '', tft: '', doubleUp: '' }, true);
+            console.log(`[VIEWACCOUNTS] No quedan cuentas vinculadas para ${discordId}. Se han removido todos los roles de rango.`);
             await interaction.editReply({
                 content: `✅ La cuenta **${accountToDelete.summonerName}#${accountToDelete.tagLine}** ha sido desvinculada. Ya no tienes cuentas vinculadas, se han **removido todos tus roles de rango** relacionados con LoL/TFT.`,
-                components: [] // Eliminar el selector después de la acción
+                components: []
             });
         } else {
-            // Si quedan cuentas, actualizamos los roles según la "última" cuenta restante
-            const accountForRoles = remainingAccounts[remainingAccounts.length - 1];
-            console.log(`[VIEWACCOUNTS] Quedan cuentas vinculadas para ${discordId}. Actualizando roles según ${accountForRoles.summonerName}#${accountForRoles.tagLine}.`);
-            // Aquí, NO pasamos `true` como tercer argumento, se comportará como una actualización normal.
-            await assignRankRoles(member, {
-                soloQ: accountForRoles.rankSoloQ,
-                flex: accountForRoles.rankFlex,
-                tft: accountForRoles.rankTFT,
-                doubleUp: accountForRoles.rankDoubleUp || 'UNRANKED'
-            });
+            console.log(`[VIEWACCOUNTS] Quedan cuentas vinculadas para ${discordId}. Roles actualizados en base a las cuentas restantes.`);
             await interaction.editReply({
-                content: `✅ La cuenta **${accountToDelete.summonerName}#${accountToDelete.tagLine}** ha sido desvinculada. Tus roles han sido actualizados en base a tu cuenta actual: **${accountForRoles.summonerName}#${accountForRoles.tagLine}**.`,
-                components: [] // Eliminar el selector después de la acción
+                content: `✅ La cuenta **${accountToDelete.summonerName}#${accountToDelete.tagLine}** ha sido desvinculada. Tus roles han sido actualizados en base a tus cuentas restantes.`,
+                components: []
             });
         }
     } else {
         console.warn(`[VIEWACCOUNTS] No se pudo encontrar GuildMember para ${discordId} al desvincular cuenta. No se pudieron actualizar los roles.`);
         await interaction.editReply({
+            // Aquí está la corrección:
             content: `✅ La cuenta **${accountToDelete.summonerName}#${accountToDelete.tagLine}** ha sido desvinculada.`,
-            components: [] // Eliminar el selector después de la acción
+            components: []
         });
     }
 

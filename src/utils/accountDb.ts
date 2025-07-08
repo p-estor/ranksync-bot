@@ -46,8 +46,7 @@ export async function upsertAccount(data: Account) {
     }
 }
 
-// Las otras funciones (getAccountsByDiscordId, deleteAccount, getAccountByPuuid) están bien,
-// ya que SELECT * devolverá puuidTFT si existe en la tabla.
+//Muestra las cuentas encoontradas por discordId
 export function getAccountsByDiscordId(discordId: string): Account[] {
     const stmt = db.prepare('SELECT * FROM accounts WHERE discordId = ?');
     const accounts = stmt.all(discordId) as Account[];
