@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RankSync Bot - User Flow Demonstration</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 20px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        h1, h2 { color: #333; }
+        img, video { max-width: 100%; height: auto; display: block; margin: 15px 0; border: 1px solid #ddd; }
+        .step { margin-bottom: 30px; padding: 15px; border: 1px solid #eee; border-radius: 8px; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>RankSync Bot - LoL/TFT Rank Synchronization for Discord</h1>
+    <p>RankSync is a Discord bot that allows users to link their League of Legends and Teamfight Tactics accounts to automatically receive updated rank roles on their Discord server.</p>
+
+    <h2>User Flow Demonstration</h2>
+
+    <div class="step">
+        <h3>Step 1: Link a Riot Games Account <img src="vincular.png" alt="vincular button"></h3>
+        <p>Users initiate the linking process with the <code>/vincular cuenta</code> button, enter their Riot ID, and verify account ownership by changing their summoner icon. Once verified, their ranks are queried, and Discord roles are automatically assigned.</p>
+        <p><strong>Command and Input Modal:</strong></p>
+        <img src="test.png" alt="Command /vincular and modal">
+        <p><strong>Icon Verification:</strong></p>
+        <img src="verify_icon.png" alt="Icon verification message">
+        <p><strong>Confirmation and Role Assignment:</strong></p>
+        <img src="verified_icon_account_linked.png" alt="Linking success message">
+        </div>
+
+    <div class="step">
+        <h3>Step 2: Refresh Ranks and Roles <img src="actualizar_datos.png" alt="actualizar button"></h3>
+        <p>Users can refresh their ranks and roles at any time to reflect changes from their recent games.</p>
+        <img src="refresh.png" alt="Refresh success message">
+    </div>
+
+    <div class="step">
+        <h3>Step 3: View and Unlink Accounts <img src="ver_cuentas.png" alt="ver cuentas button"></h3>
+        <p>Users can view all Riot accounts linked to their Discord and have the option to unlink any of them.</p>
+        <img src="view_accounts.png" alt="Command /viewaccounts">
+        <img src="unlink_account_menu_select.png" alt="Unlink selector">
+        <img src="unlinked_account_message.png" alt="Unlink success message">
+    </div>
+
+    <h2>Technical Information</h2>
+    <p>Developed with Node.js and Discord.js, utilizing the Riot Games API (via TeemoJS) and SQLite for local data management.</p>
+    <p>Key functionalities: Secure account linking, ownership verification, dynamic Discord rank and role updates, support for multiple accounts per user.</p>
+
+    <h2>Commitment to Riot Games Policies</h2>
+    <p>The RankSync bot fully complies with Riot Games' Terms of Service and Developer Policies. It does not store sensitive user data, only PUUIDs and ranks necessary for core functionality. All Riot API operations are performed in accordance with established guidelines.</p>
+    <p>GitHub Repository: <a href="https://github.com/p-estor/ranksync-bot" target="_blank">https://github.com/p-estor/ranksync-bot</a></p>
+
+</body>
+</html>
